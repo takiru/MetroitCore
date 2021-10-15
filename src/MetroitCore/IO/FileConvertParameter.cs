@@ -6,96 +6,96 @@
     public class FileConvertParameter : IConvertParameter
     {
         /// <summary>
-        /// 変換元ファイルのパスの取得または設定します。
+        /// 任意の変換パラメーターを取得または設定します。
         /// </summary>
-        public string SourceFilePath { get; set; }
+        public object[] Params { get; set; }
 
         /// <summary>
-        /// ファイルを保存する変換先パスの取得または設定します。
+        /// どのファイルを処理ターゲットにするかを取得または設定します。
         /// </summary>
-        public string DestinationFilePath { get; set; }
+        public ReactiveFileTarget ReactiveTarget { get; set; } = ReactiveFileTarget.Original;
 
         /// <summary>
-        /// 一時ディレクトリを利用した変換を行うかどうかの取得または設定します。
+        /// 変換が実施されたオリジナルファイルのパスを取得します。
+        /// 一時ディレクトリを利用している場合、一時ディレクトリにコピーしたオリジナルファイルのパスとなります。
         /// </summary>
-        public bool UseTemporary { get; set; }
+        public string OriginalFileName { get; internal set; } = null;
 
         /// <summary>
-        /// <para>一時ディレクトリの取得または設定します。</para>
+        /// 変換元ファイルのパスを取得または設定します。
+        /// </summary>
+        public string SourceFileName { get; set; } = null;
+
+        /// <summary>
+        /// <para>変換元ファイルとして一時ファイルを利用するかどうかを取得または設定します。</para>
+        /// <para>利用する場合、変換元ファイルを一時ディレクトリにコピーしてから変換を行います。</para>
+        /// </summary>
+        public bool UseSourceTemporary { get; set; } = false;
+
+        /// <summary>
+        /// <para>変換元の一時ディレクトリを取得または設定します。</para>
         /// <para>設定しない場合、Windows標準の一時ディレクトリを使用します。</para>
         /// </summary>
-        public string TemporaryDirectory { get; set; }
+        public string SourceTempDirectory { get; set; } = null;
 
         /// <summary>
-        /// DestinationFilePath に既に同名のファイルがあった時、上書きするかどうかの取得または設定します。
+        /// <para>変換を行う元ファイルパスを取得します。</para>
+        /// <para>UseSourceTemporary = true の場合、SourceTempDirectory のファイルパスとなります。</para>
         /// </summary>
-        public bool Overwrite { get; set; }
+        public string SourceConvertFileName { get; internal set; } = null;
 
         /// <summary>
-        /// 一時ディレクトリを利用した際に、変換が行われたファイルのフルパスの取得を行います。
+        /// 変換先ファイルのパスの取得または設定します。
         /// </summary>
-        public string TemporaryFilePath { get; internal set; }
+        public string DestFileName { get; set; } = null;
 
         /// <summary>
-        /// <para>変換を行うファイルパスの取得を行います。</para>
-        /// <para>UseTemporary=trueの場合、TemporaryFilePath と同じです。</para>
-        /// <para>UseTemporary=falseの場合、DestinationFilePath と同じです。</para>
+        /// <para>変換先として一時ディレクトリを利用するかどうかの取得または設定します。</para>
+        /// <para>利用する場合、一時ディレクトリに変換してから変換先ファイルへ移動します。</para>
         /// </summary>
-        public string ConvertingPath { get; internal set; }
+        public bool UseDestTemporary { get; set; } = false;
+
+        /// <summary>
+        /// <para>変換先の一時ディレクトリの取得または設定します。</para>
+        /// <para>設定しない場合、Windows標準の一時ディレクトリを使用します。</para>
+        /// </summary>
+        public string DestTempDirectory { get; set; } = null;
+
+        /// <summary>
+        /// <para>変換先となるファイルパスの取得を行います。</para>
+        /// <para>UseDestTemporary = true の場合、DestTempDirectory のファイルパスとなります。</para>
+        /// </summary>
+        public string DestConvertFileName { get; internal set; } = null;
+
+        /// <summary>
+        /// <para>変換先ファイルが既に存在する時、上書きするかどうかの取得または設定します。</para>
+        /// <para>上書きしない時、変換先ファイルが存在する場合は変換は行われません。</para>
+        /// </summary>
+        public bool Overwrite { get; set; } = false;
+
+        /// <summary>
+        /// <para>変換先の一時ディレクトリを使用時、段階的な変換を必要とする時に、途中の変換結果をスルーするかどうかを取得または設定します。</para>
+        /// <para>true が選択され、UseDestTemporary = true の場合、DestFileName にファイルが作られません。</para>
+        /// </summary>
+        public bool DestThrough { get; set; } = false;
 
         /// <summary>
         /// FileConvertParameter クラスの新しいインスタンスを初期化します。
         /// </summary>
-        public FileConvertParameter()
-        {
-            SourceFilePath = null;
-            DestinationFilePath = null;
-            UseTemporary = false;
-            TemporaryDirectory = null;
-            Overwrite = false;
-            TemporaryFilePath = null;
-            ConvertingPath = null;
-        }
+        public FileConvertParameter() { }
 
         /// <summary>
         /// FileConvertParameter クラスの新しいインスタンスを初期化します。
+        /// <param name="sourceFileName">変換元ファイル。</param>
+        /// <param name="destFileName">変換先ファイル。</param>
+        /// <param name="overwrite">上書きするかどうか。</param>
         /// </summary>
-        /// <param name="useTemporary">一時ディレクトリを利用するかどうか。</param>
-        /// <param name="directory">一時ディレクトリ。</param>
-        public FileConvertParameter(bool useTemporary, string directory = null)
+        public FileConvertParameter(string sourceFileName, string destFileName, bool overwrite = false)
             : this()
         {
-            UseTemporary = useTemporary;
-            if (useTemporary)
-            {
-                TemporaryDirectory = directory;
-            }
-        }
-
-        /// <summary>
-        /// FileConvertParameter クラスの新しいインスタンスを初期化します。
-        /// <param name="sourceFilePath">変換元ファイルのフルパス。</param>
-        /// <param name="useTemporary">一時ディレクトリを利用するかどうか。</param>
-        /// <param name="directory">一時ディレクトリ。</param>
-        /// </summary>
-        public FileConvertParameter(string sourceFilePath, bool useTemporary = false, string directory = null)
-            : this(useTemporary, directory)
-        {
-            SourceFilePath = sourceFilePath;
-        }
-
-        /// <summary>
-        /// FileConvertParameter クラスの新しいインスタンスを初期化します。
-        /// <param name="sourceFilePath">変換元ファイルのフルパス。</param>
-        /// <param name="destinationFilePath">変換先ファイルのフルパス。</param>
-        /// <param name="useTemporary">一時ディレクトリを利用するかどうか。</param>
-        /// <param name="directory">一時ディレクトリ。</param>
-        /// </summary>
-        public FileConvertParameter(string sourceFilePath, string destinationFilePath, bool useTemporary = false,
-                string directory = null)
-            : this(sourceFilePath, useTemporary, directory)
-        {
-            DestinationFilePath = destinationFilePath;
+            SourceFileName = sourceFileName;
+            DestFileName = destFileName;
+            Overwrite = overwrite;
         }
     }
 }
